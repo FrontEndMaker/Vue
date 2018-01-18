@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Vue</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.js"></script>
+	<style>
+	.strike {
+		text-decoration: line-through;
+	}
+	.box {
+		width: 100px;
+		height: 100px;
+		background: #4eb1ba;
+	}
+	aside {
+		background: #ccc111;
+		width: 250px;
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		right: 0;
+	}
+
+	/* Анимация перехода */
+	.slide-enter-active, .slide-leave-active {
+		transition: all .3s cubic-bezier(.65, .05, .36, 1);
+	}
+
+	.slide-enter, .slide-leave-active {
+		right: -100%;
+	}
+	nav {
+		height: 48px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	nav a {
+		line-height: 48px;
+		display: block;
+		text-decoration: none;
+		padding: 0 10px;
+		transition: all .3s ease-in-out;
+	}
+
+	nav a:hover {
+		background-color: #12106D;
+	}
+
+	.red-box, .blue-box,
+	.green-box, .yellow-box {
+		position: absolute;
+		width: 300px;
+		height: 300px;
+		border-radius: 10px;
+		left: 50%;
+		top: 100px;
+	}
+
+	.red-box {
+		background-color: red;
+	}
+
+	.blue-box {
+		background-color: blue;
+	}
+
+	.green-box {
+		background-color: green;
+	} 
+
+	.yellow-box {
+		background-color: yellow;
+	}
+
+	.switch-enter-active, .switch-leave-active {
+		transition: all .5s ease-in-out;
+	}
+
+	.switch-enter {
+		left: 0;
+	}
+
+	.switch-leave-to {
+		left: 100%;
+	}
+
+
+</style>
+</head>
+<body>
+
+	<div id="app">
+
+		<!-- динамический текст -->
+		<h1> {{message}} </h1>
+		<input type="text" v-model="message">
+
+
+		<!-- список -->
+		<ul>
+			<li v-for="bear in bears" v-bind:class="{ 'strike': bear.status}">{{bear.name}}</li>
+		</ul>
+
+
+		<!-- метод клика -->
+		<button v-on:click="onClick">button</button>
+
+
+		<!-- отслеживание нажатия Энтер -->
+		<input type="text" v-model="enter" v-on:keyup.13="event"><br>
+
+
+		<!-- скрытие -->
+		<button @click="show = !show">Квадрат</button>
+		<div class="box" v-show="show"></div> <!-- Меняет дисплей none -->
+		<div class="box" v-if="show"></div>  <!--Удаляет из DOM-дерева -->
+		<div v-else>Пусто</div>
+
+
+		<!-- фильтр -->
+		{{ "reqwfc" | capitalize }}
+
+
+		<!-- переходы -->
+		<header>
+			<button @click="display = !display">Кнопка</button>
+		</header>
+		<transition name="slide">
+			<aside v-show="display"></aside>
+		</transition>
+
+
+		<!-- сортировка -->
+		<button @click="sort = 'name'">По имени</button>
+		<button @click="sort = 'age'">По возрасту</button>
+		<ul>
+			<li v-for="man in orderedArray">{{man.name}}, {{man.age}}</li>
+		</ul>
+
+		
+		<!-- поиск -->
+		<input type="text" placeholder="Поиск" v-model="search" />
+		<li v-for="user in filteredArray">
+			{{ user.name }}
+		</li>
+
+
+		<!-- счетчик -->
+		<form action="">
+			<span>{{count}}/30</span>
+			<textarea v-model="text"></textarea>
+			<button v-if="count <= 30">Send</button>
+		</form>
+
+
+		<!-- компоненты -->
+		<modal btn-text="Согласен">Вопрос 1</modal>
+		<modal btn-text="Хорошо">Вопрос 2</modal>
+
+
+		<!-- динамические компоненты -->
+		
+		<nav>
+			<a href="#" @click="switchView('redBox')">Red</a>
+			<a href="#" @click="switchView('blueBox')">Blue</a>
+			<a href="#" @click="switchView('greenBox')">Green</a>
+			<a href="#" @click="switchView('yellowBox')">Yellow</a>
+		</nav>
+		
+
+		<!-- <component is="triangle"></component> -->
+		<transition name="switch">
+			<component v-bind:is="currentView"></component>
+		</transition>
+
+
+		<message @message-saved="handleMessage"></message>
+
+		<ul>
+			<li v-for="item in messages">{{item}}</li>
+		</ul>
+
+	</div>
+
+	<!-- шаблон -->
+	<template id="modal-template">
+		<div>
+			<div class="Dialog" v-show="active">
+				<div class="Dialog__overlay" @click="close()"></div>
+				<div class="Dialog__content">
+					<div class="Dialog__body">
+						<slot></slot>
+					</div>
+					<div class="Dialog__footer">
+						<button class="btn" @click="onCancel()">Отмена</button>
+						<button class="btn btn-ok" @click="onConfirm()">{{ btnText }}</button>
+					</div>
+				</div>
+			</div>
+			<a href="#" class="link" @click="open()">ссылка</a>
+		</div>
+	</template>
+
+
+	<template id="red-template">
+		<div class="red-box"></div>
+	</template>
+	<template id="blue-template">
+		<div class="blue-box"></div>
+	</template>
+	<template id="green-template">
+		<div class="green-box"></div>
+	</template>
+	<template id="yellow-template">
+		<div class="yellow-box"></div>
+	</template>
+
+
+	<div class="container col-sm-8 col-sm-offset-2">
+		<div id="taskApp">
+			<div class="inf">
+				<h2 class='text-center'>Лист с делами</h2>
+				<form v-on:submit='addTask'>
+					<div class="col-sm-8 mb">
+						<input type="text" class='form-control' v-model="inputVal" placeholder="Добавить">
+					</div>
+					<div class="col-sm-4 mb">
+						<input type="submit" value='Добавить' class='btn btn-primary btn-block'>
+					</div>
+					<div class="search-wrapper">
+						<input type="text" v-model.trim="search" placeholder="Поиск" class="search"/>
+					</div>
+				</form>
+			</div>
+			<div>
+				<ul v-for='(task, index) in filtered'>
+					<li><span v-if="task !== editingTask" @click="editTask(task)">{{ task.name }}</span><input type="text" v-if="task === editingTask" autofocus class="left" @keyup.enter="endEditing(task)" v-model="task.name"></li>
+					<li><button class="btn btn-danger btn-block" v-on:click="deleteTask(task)">Удалить</button></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="https://unpkg.com/vue@2.4.4/dist/vue.js"></script>
+	<script>
+		Vue.component('modal', {
+			template: '#modal-template',
+			data: function() {
+				return {
+					active: false
+				}
+			},
+			props: ['btnText'],
+			methods: {
+				open: function() {
+					this.active = true;
+				},
+				close: function() {
+					this.active = false;
+				},
+				onCancel: function() {
+					this.close();
+				},
+				onConfirm: function() {
+					this.close();
+				}
+			}
+		});
+
+		Vue.component('message', {
+			template: '<input v-model="message" @keyup.enter="saveMessage">',
+			data: function() {
+				return {
+					message: ""
+				}
+			},
+			methods: {
+				saveMessage: function() {
+					this.$emit('message-saved', this.message)
+					this.message = ''
+				}
+			}
+		})
+
+		new Vue ({
+			el:"#app",
+			data: {
+				message: 'Hello Vue.js!',
+				enter: '',
+				active: false,
+				sort: 'name',
+				text: '',
+				show: false,
+				messages: [],
+				search: 'Alex',
+				display: false,
+				currentView: 'redBox',
+
+				bears: [
+				{name:'гризли', status:true},
+				{name:'белый', status:false},
+				{name:'панда', status:true},
+				{name:'губач', status:true}
+				],
+
+				array: [
+				{name:'Andrew', age:21},
+				{name:'John', age:30},
+				{name:'Alex', age:18},
+				{name:'David', age:46}
+				],
+			},
+			components: {
+				redBox: {
+					template: "#red-template"
+				},
+				blueBox: {
+					template: "#blue-template"
+				},
+				greenBox: {
+					template: "#green-template"
+				},
+				yellowBox: {
+					template: "#yellow-template"
+				}
+			},
+			methods:{
+				onClick: function(e) {
+					e.preventDefault();
+					console.log("It works")
+				},
+				event: function() {
+					console.log(this.enter)
+				},
+				switchView: function(view) {
+					this.currentView = view
+				},
+				handleMessage: function(message) {
+					this.messages.push(message)
+
+				}
+			},
+			filters: {
+				capitalize: function (value) {
+					if (!value) return ''
+						value = value.toString()
+					return value.charAt(0).toUpperCase() + value.slice(1)
+				}
+			},
+			computed: {
+				orderedArray: function () {
+					return _.orderBy(this.array, this.sort)
+				},
+				filteredArray: function () {
+					return this.array.filter(function (user) {
+						return user.name.indexOf(this.search) !== -1
+					}.bind(this))
+				},
+				count: function() {
+					return this.text.length
+				}
+			}
+		})
+
+		lightStorage = {
+			storage:{},
+			getItem(id) {
+				return this.storage[id];
+			},
+			setItem(id,value) {
+				return this.storage[id]=value;
+			}
+		}
+
+		var keyLocal = 'vue-js'
+		var todoStorage = {
+			fetch: function () {
+				var todos = JSON.parse(lightStorage.getItem(keyLocal) || '[]');
+				return todos;
+			},
+			save: function (todos) {
+				lightStorage.setItem(keyLocal, JSON.stringify(todos));
+			}
+		}
+
+		var app = new Vue({
+			el: '#taskApp',
+			data: {
+				search: '',
+				inputVal: '',
+				changeVal: '',
+				editingTask: '',
+				show: false,
+				tasks: [
+				{
+					name: '',
+					status: false
+				}
+				],
+			},
+			watch: {
+				tasks: {
+					handler: function(tasks) {
+						todoStorage.save(tasks);
+					}
+				}
+			},
+			mounted() {
+				tasks = todoStorage.fetch()
+			},
+			methods: {
+				addTask: function(e) {
+					e.preventDefault();
+					if(this.inputVal){
+						this.tasks.push({
+							name: this.inputVal,
+							status: false,
+						}); 
+					}
+				},
+				deleteTask: function(task) {
+					let index = this.tasks.indexOf(task)
+					this.tasks.splice(index, 1)
+				},
+				editTask: function (task) {
+					this.editingTask = task;
+				},
+				endEditing: function (todos) {
+					this.editingTask = lightStorage.setItem(keyLocal, JSON.stringify(todos))
+				}
+			},
+			computed: {
+				filtered () {
+					return this.tasks.filter((tasks) => {
+						return tasks.name.match(this.search)
+					})
+				}
+			}
+		})
+	</script>
+</body>
+</html>
