@@ -183,6 +183,17 @@
 			<li v-for="item in messages">{{item}}</li>
 		</ul>
 
+
+		<div id="main">
+  			<nav v-bind:class="active_item" v-on:click.prevent>
+			    <a href="#" class="home" v-on:click="makeActive('home')">Home</a>
+			    <a href="#" class="projects" v-on:click="makeActive('projects')">Projects</a>
+			    <a href="#" class="services" v-on:click="makeActive('services')">Services</a>
+			    <a href="#" class="contact" v-on:click="makeActive('contact')">Contact</a>
+  			</nav>
+  
+  			<p style="text-align: center">You chose <b>{{ active_item }}</b></p>
+		</div>
 	</div>
 
 	<!-- шаблон -->
@@ -298,6 +309,7 @@
 				search: 'Alex',
 				display: false,
 				currentView: 'redBox',
+    			active_item: 'home',
 
 				bears: [
 				{name:'гризли', status:true},
@@ -327,7 +339,7 @@
 					template: "#yellow-template"
 				}
 			},
-			methods:{
+			methods: {
 				onClick: function(e) {
 					e.preventDefault();
 					console.log("It works")
@@ -340,8 +352,10 @@
 				},
 				handleMessage: function(message) {
 					this.messages.push(message)
-
-				}
+				},
+				makeActive: function(item){
+        			this.active_item = item;
+    			}
 			},
 			filters: {
 				capitalize: function (value) {
